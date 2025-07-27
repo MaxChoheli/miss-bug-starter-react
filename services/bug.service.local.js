@@ -1,80 +1,72 @@
-import { utilService } from './util.service.js'
-import { storageService } from './async-storage.service.js'
-
-const STORAGE_KEY = 'bugs'
-
-_createBugs()
-
 export const bugService = {
     query,
     getById,
     save,
     remove,
-    getDefaultFilter
 }
 
-function query(filterBy) {
-    return storageService.query(STORAGE_KEY)
-    .then(bugs => {
+let bugs = [
+    {
+        _id: '1NF1N1T3',
+        title: 'Infinite Loop Detected',
+        description: 'Looping forever in main thread',
+        severity: 4,
+        createdAt: Date.now()
+    },
+    {
+        _id: 'K3YB0RD',
+        title: 'Keyboard Not Found',
+        description: 'User keyboard disappeared!',
+        severity: 3,
+        createdAt: Date.now()
+    },
+    {
+        _id: 'C0FF33',
+        title: '404 Coffee Not Found',
+        description: 'The coffee machine is empty!',
+        severity: 2,
+        createdAt: Date.now()
+    },
+    {
+        _id: 'G0053',
+        title: 'Unexpected Response',
+        description: 'The server sent back an alien format',
+        severity: 1,
+        createdAt: Date.now()
+    }
+]
 
-        if (filterBy.txt) {
-            const regExp = new RegExp(filterBy.txt, 'i')
-            bugs = bugs.filter(bug => regExp.test(bug.title))
-        }
-
-        if (filterBy.minSeverity) {
-            bugs = bugs.filter(bug => bug.severity >= filterBy.minSeverity)
-        }
-
-        return bugs
-    })
+function query() {
+    return Promise.resolve(bugs)
 }
 
 function getById(bugId) {
-    return storageService.get(STORAGE_KEY, bugId)
+    const bug = bugs.find(b => b._id === bugId)
+    return Promise.resolve(bug)
 }
 
 function remove(bugId) {
-    return storageService.remove(STORAGE_KEY, bugId)
+    bugs = bugs.filter(b => b._id !== bugId)
+    return Promise.resolve()
 }
 
 function save(bug) {
     if (bug._id) {
-        return storageService.put(STORAGE_KEY, bug)
+        const idx = bugs.findIndex(b => b._id === bug._id)
+        bugs[idx] = bug
     } else {
-        return storageService.post(STORAGE_KEY, bug)
+        bug._id = _makeId()
+        bug.createdAt = Date.now()
+        bugs.push(bug)
     }
+    return Promise.resolve(bug)
 }
 
-function _createBugs() {
-    let bugs = utilService.loadFromStorage(STORAGE_KEY)
-    if (bugs && bugs.length > 0) return 
-
-    bugs = [
-        {
-            title: "Infinite Loop Detected",
-            severity: 4,
-            _id: "1NF1N1T3"
-        },
-        {
-            title: "Keyboard Not Found",
-            severity: 3,
-            _id: "K3YB0RD"
-        },
-        {
-            title: "404 Coffee Not Found",
-            severity: 2,
-            _id: "C0FF33"
-        },
-        {
-            title: "Unexpected Response",
-            severity: 1,
-            _id: "G0053"
-        }
-    ]
-    utilService.saveToStorage(STORAGE_KEY, bugs)
-}
-
-function getDefaultFilter() {
-    return { txt: '', minSeverity: 0 }
+function _makeId(length = 6) {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+    let txt = ''
+    for (let i = 0; i < length; i++) {
+        txt += chars.charAt(Math.floor(Math.random() * chars.length))
+    }
+    return txt
 }
