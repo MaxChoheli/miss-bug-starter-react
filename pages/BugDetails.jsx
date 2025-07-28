@@ -11,9 +11,16 @@ export function BugDetails() {
 
     useEffect(() => {
         bugService.getById(bugId)
-            .then(bug => setBug(bug))
-            .catch(err => showErrorMsg(`Cannot load bug`, err))
-    }, [])
+            .then(setBug)
+            .catch(err => {
+                if (err.message === 'Wait for a bit') {
+                    showErrorMsg("You've viewed too many bugs. Please wait 7 seconds.")
+                } else {
+                    showErrorMsg('Cannot load bug')
+                }
+            })
+    }, [bugId])
+
 
     return <div className="bug-details">
         <h3>Bug Details</h3>

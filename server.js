@@ -4,7 +4,11 @@ import cors from 'cors'
 import { bugService } from './services/bug.service.local.js'
 
 const app = express()
-app.use(cors())
+
+app.use(cors({
+    origin: 'http://127.0.0.1:5500',
+    credentials: true
+}))
 app.use(cookieParser())
 app.use(express.json())
 
@@ -23,13 +27,39 @@ app.get('/api/bug', async (req, res) => {
 app.get('/api/bug/:bugId', async (req, res) => {
     try {
         const bugId = req.params.bugId
-        console.log('Getting bug with ID:', bugId)
+
+        let visitedBugIds = []
+        if (req.cookies.visitedBugs) {
+            try {
+                visitedBugIds = JSON.parse(req.cookies.visitedBugs)
+            } catch {
+                visitedBugIds = []
+            }
+        }
+
+        if (!visitedBugIds.includes(bugId)) {
+            visitedBugIds = [...visitedBugIds, bugId]
+        }
+
+        if (visitedBugIds.length > 3) {
+            return res.status(401).send('Wait for a bit')
+        }
+
+        res.cookie('visitedBugs', JSON.stringify(visitedBugIds), {
+            maxAge: 7000,
+            sameSite: 'None',
+            secure: false,
+            httpOnly: false,
+            path: '/',
+            domain: '127.0.0.1'
+        })
+
+        console.log('User visited the following bugs:', visitedBugIds)
 
         const bug = await bugService.getById(bugId)
-        console.log('Bug found:', bug)
-
         if (!bug) return res.status(404).send({ error: 'Bug not found' })
         res.send(bug)
+
     } catch (err) {
         console.error('Failed to get bug', err)
         res.status(500).send({ error: 'Failed to get bug' })
