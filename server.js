@@ -47,11 +47,10 @@ app.get('/api/bug/:bugId', async (req, res) => {
 
         res.cookie('visitedBugs', JSON.stringify(visitedBugIds), {
             maxAge: 7000,
-            sameSite: 'None',
+            sameSite: 'Lax',
             secure: false,
             httpOnly: false,
             path: '/',
-            domain: '127.0.0.1'
         })
 
         console.log('User visited the following bugs:', visitedBugIds)
