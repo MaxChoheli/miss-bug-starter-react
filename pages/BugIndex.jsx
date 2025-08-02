@@ -14,7 +14,12 @@ export function BugIndex() {
 
     function loadBugs() {
         bugService.query(filterBy)
-            .then(setBugs)
+            .then(bugs => {
+                if (filterBy.label) {
+                    bugs = bugs.filter(bug => bug.labels && bug.labels.includes(filterBy.label))
+                }
+                setBugs(bugs)
+            })
             .catch(err => showErrorMsg(`Couldn't load bugs - ${err}`))
     }
 
@@ -25,14 +30,16 @@ export function BugIndex() {
                 setBugs(bugsToUpdate)
                 showSuccessMsg('Bug removed')
             })
-            .catch((err) => showErrorMsg(`Cannot remove bug`, err))
+            .catch(err => showErrorMsg(`Cannot remove bug`, err))
     }
 
     function onAddBug() {
-        const bug = {
-            title: prompt('Bug title?', 'Bug ' + Date.now()),
-            severity: +prompt('Bug severity?', 3)
-        }
+        const title = prompt('Bug title?', 'Bug ' + Date.now())
+        const severity = +prompt('Bug severity?', 3)
+        const labelStr = prompt('Labels? (comma separated)', '')
+        const labels = labelStr ? labelStr.split(',').map(l => l.trim()) : []
+
+        const bug = { title, severity, labels }
 
         bugService.save(bug)
             .then(savedBug => {
@@ -44,13 +51,15 @@ export function BugIndex() {
 
     function onEditBug(bug) {
         const severity = +prompt('New severity?', bug.severity)
-        const bugToSave = { ...bug, severity }
+        const labelStr = prompt('New labels? (comma separated)', (bug.labels && bug.labels.join(', ')) || '')
+        const labels = labelStr ? labelStr.split(',').map(l => l.trim()) : []
+
+        const bugToSave = { ...bug, severity, labels }
 
         bugService.save(bugToSave)
             .then(savedBug => {
                 const bugsToUpdate = bugs.map(currBug =>
                     currBug._id === savedBug._id ? savedBug : currBug)
-
                 setBugs(bugsToUpdate)
                 showSuccessMsg('Bug updated')
             })
@@ -62,13 +71,11 @@ export function BugIndex() {
     }
 
     return <section className="bug-index main-content">
-
         <BugFilter filterBy={filterBy} onSetFilterBy={onSetFilterBy} />
         <header>
             <h3>Bug List</h3>
             <button onClick={onAddBug}>Add Bug</button>
         </header>
-
         <BugList
             bugs={bugs}
             onRemoveBug={onRemoveBug}

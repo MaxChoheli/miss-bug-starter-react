@@ -1,7 +1,6 @@
 const { useState, useEffect } = React
 
 export function BugFilter({ filterBy, onSetFilterBy }) {
-
     const [filterByToEdit, setFilterByToEdit] = useState(filterBy)
 
     useEffect(() => {
@@ -17,12 +16,8 @@ export function BugFilter({ filterBy, onSetFilterBy }) {
             case 'range':
                 value = +value || ''
                 break
-
             case 'checkbox':
                 value = target.checked
-                break
-
-            default:
                 break
         }
 
@@ -34,7 +29,8 @@ export function BugFilter({ filterBy, onSetFilterBy }) {
         onSetFilterBy(filterByToEdit)
     }
 
-    const { txt, minSeverity } = filterByToEdit
+    const { txt, minSeverity, label } = filterByToEdit
+
     return (
         <section className="bug-filter">
             <h2>Filter</h2>
@@ -44,6 +40,9 @@ export function BugFilter({ filterBy, onSetFilterBy }) {
 
                 <label htmlFor="minSeverity">Min Severity: </label>
                 <input value={minSeverity} onChange={handleChange} type="number" placeholder="By Min Severity" id="minSeverity" name="minSeverity" />
+
+                <label htmlFor="label">Label: </label>
+                <input value={label} onChange={handleChange} type="text" placeholder="By Label" id="label" name="label" />
             </form>
         </section>
     )

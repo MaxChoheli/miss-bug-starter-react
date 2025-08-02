@@ -38,6 +38,7 @@ function save(bug) {
     params.append('title', bug.title)
     params.append('description', bug.description || 'No description')
     params.append('severity', bug.severity)
+    if (bug.labels) bug.labels.forEach(label => params.append('labels', label))
 
     return fetch(`${BASE_URL}/save?${params.toString()}`, {
         credentials: 'include'
@@ -45,5 +46,5 @@ function save(bug) {
 }
 
 function getDefaultFilter() {
-    return { txt: '', minSeverity: 0 }
+    return { txt: '', minSeverity: 0, label: '' }
 }

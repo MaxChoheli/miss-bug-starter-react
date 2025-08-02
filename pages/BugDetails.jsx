@@ -5,7 +5,6 @@ import { bugService } from '../services/bug.service.js'
 import { showErrorMsg } from '../services/event-bus.service.js'
 
 export function BugDetails() {
-
     const [bug, setBug] = useState(null)
     const { bugId } = useParams()
 
@@ -21,7 +20,6 @@ export function BugDetails() {
             })
     }, [bugId])
 
-
     return <div className="bug-details">
         <h3>Bug Details</h3>
         {!bug && <p className="loading">Loading....</p>}
@@ -31,6 +29,9 @@ export function BugDetails() {
                 <h4>{bug.title}</h4>
                 <h5>Severity: <span>{bug.severity}</span></h5>
                 <p>{bug.description}</p>
+                {bug.labels && bug.labels.length > 0 && (
+                    <p>Labels: {bug.labels.join(', ')}</p>
+                )}
             </div>
         }
         <hr />
