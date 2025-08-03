@@ -16,13 +16,32 @@ app.get('/', (req, res) => res.send('Hello there'))
 
 app.get('/api/bug', async (req, res) => {
     try {
-        const bugs = await bugService.query()
+        const { txt, minSeverity, labels, sortBy, sortDir, pageIdx } = req.query
+
+        const filterBy = {
+            txt: txt || '',
+            minSeverity: +minSeverity || 0,
+            labels: labels ? labels.split(',') : []
+        }
+
+        const sortOptions = {
+            sortBy: sortBy || 'createdAt',
+            sortDir: sortDir === '-1' ? -1 : 1
+        }
+
+        const paging = {
+            pageIdx: +pageIdx || 0,
+            pageSize: 3
+        }
+
+        const bugs = await bugService.query(filterBy, sortOptions, paging)
         res.send(bugs)
     } catch (err) {
         console.error('Failed to get bugs', err)
         res.status(500).send({ error: 'Failed to get bugs' })
     }
 })
+
 
 app.get('/api/bug/:bugId', async (req, res) => {
     try {
@@ -58,31 +77,36 @@ app.get('/api/bug/:bugId', async (req, res) => {
         const bug = await bugService.getById(bugId)
         if (!bug) return res.status(404).send({ error: 'Bug not found' })
         res.send(bug)
-
     } catch (err) {
         console.error('Failed to get bug', err)
         res.status(500).send({ error: 'Failed to get bug' })
     }
 })
 
-app.get('/api/bug/save', async (req, res) => {
+app.post('/api/bug', async (req, res) => {
     try {
-        const bug = {
-            _id: req.query._id,
-            title: req.query.title,
-            description: req.query.description,
-            severity: +req.query.severity,
-            createdAt: req.query._id ? undefined : Date.now()
-        }
+        const bug = req.body
+        bug.createdAt = Date.now()
         const savedBug = await bugService.save(bug)
         res.send(savedBug)
     } catch (err) {
-        console.error('Failed to save bug', err)
-        res.status(500).send({ error: 'Failed to save bug' })
+        console.error('Failed to add bug', err)
+        res.status(500).send({ error: 'Failed to add bug' })
     }
 })
 
-app.get('/api/bug/:bugId/remove', async (req, res) => {
+app.put('/api/bug/:bugId', async (req, res) => {
+    try {
+        const bug = { ...req.body, _id: req.params.bugId }
+        const savedBug = await bugService.save(bug)
+        res.send(savedBug)
+    } catch (err) {
+        console.error('Failed to update bug', err)
+        res.status(500).send({ error: 'Failed to update bug' })
+    }
+})
+
+app.delete('/api/bug/:bugId', async (req, res) => {
     try {
         await bugService.remove(req.params.bugId)
         res.send({ msg: 'Bug removed' })

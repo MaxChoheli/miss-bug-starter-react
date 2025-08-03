@@ -40,8 +40,39 @@ let bugs = [
     }
 ]
 
-function query() {
-    return Promise.resolve(bugs)
+function query(filterBy = {}, sortOptions = {}, paging = {}) {
+    let filteredBugs = [...bugs]
+
+    if (filterBy.txt) {
+        const regex = new RegExp(filterBy.txt, 'i')
+        filteredBugs = filteredBugs.filter(bug =>
+            regex.test(bug.title) || regex.test(bug.description)
+        )
+    }
+
+    if (filterBy.minSeverity) {
+        filteredBugs = filteredBugs.filter(bug => bug.severity >= filterBy.minSeverity)
+    }
+
+    if (filterBy.labels && filterBy.labels.length) {
+        filteredBugs = filteredBugs.filter(bug =>
+            bug.labels && bug.labels.some(label => filterBy.labels.includes(label))
+        )
+    }
+
+    if (sortOptions.sortBy) {
+        const dir = sortOptions.sortDir === -1 ? -1 : 1
+        filteredBugs.sort((a, b) => {
+            if (a[sortOptions.sortBy] < b[sortOptions.sortBy]) return -1 * dir
+            if (a[sortOptions.sortBy] > b[sortOptions.sortBy]) return 1 * dir
+            return 0
+        })
+    }
+
+    const startIdx = paging.pageIdx * paging.pageSize
+    const pagedBugs = paging.pageSize ? filteredBugs.slice(startIdx, startIdx + paging.pageSize) : filteredBugs
+
+    return Promise.resolve(pagedBugs)
 }
 
 function getById(bugId) {
