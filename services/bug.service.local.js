@@ -12,7 +12,8 @@ let bugs = [
         description: 'Looping forever in main thread',
         severity: 4,
         createdAt: Date.now(),
-        labels: ['critical', 'performance']
+        labels: ['critical', 'performance'],
+        creator: { _id: 'u101', fullname: 'Puki Ja' }
     },
     {
         _id: 'K3YB0RD',
@@ -20,7 +21,8 @@ let bugs = [
         description: 'User keyboard disappeared!',
         severity: 3,
         createdAt: Date.now(),
-        labels: ['hardware', 'investigate']
+        labels: ['hardware', 'investigate'],
+        creator: { _id: 'u101', fullname: 'Puki Ja' }
     },
     {
         _id: 'C0FF33',
@@ -28,7 +30,8 @@ let bugs = [
         description: 'The coffee machine is empty!',
         severity: 2,
         createdAt: Date.now(),
-        labels: ['funny', 'low-priority']
+        labels: ['funny', 'low-priority'],
+        creator: { _id: 'u101', fullname: 'Puki Ja' }
     },
     {
         _id: 'G0053',
@@ -36,7 +39,8 @@ let bugs = [
         description: 'The server sent back an alien format',
         severity: 1,
         createdAt: Date.now(),
-        labels: ['bug', 'api']
+        labels: ['bug', 'api'],
+        creator: { _id: 'u101', fullname: 'Puki Ja' }
     }
 ]
 
@@ -93,6 +97,7 @@ function save(bug) {
         bug._id = _makeId()
         bug.createdAt = Date.now()
         bug.labels = bug.labels || []
+        bug.creator = bug.creator || { _id: 'u101', fullname: 'Puki Ja' }
         bugs.push(bug)
     }
     return Promise.resolve(bug)

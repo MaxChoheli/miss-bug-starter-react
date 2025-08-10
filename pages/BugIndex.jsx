@@ -1,6 +1,7 @@
 const { useState, useEffect } = React
 
 import { bugService } from '../services/bug.service.js'
+import { userService } from '../services/user.service.js'
 import { showSuccessMsg, showErrorMsg } from '../services/event-bus.service.js'
 
 import { BugFilter } from '../cmps/BugFilter.jsx'
@@ -34,13 +35,15 @@ export function BugIndex() {
     }
 
     function onAddBug() {
+        const user = userService.getLoggedinUser()
+        if (!user) return showErrorMsg('Please log in first')
         const title = prompt('Bug title?', 'Bug ' + Date.now())
+        const description = prompt('Bug description?', '')
         const severity = +prompt('Bug severity?', 3)
         const labelStr = prompt('Labels? (comma separated)', '')
         const labels = labelStr ? labelStr.split(',').map(l => l.trim()) : []
-
-        const bug = { title, severity, labels }
-
+        const creator = { _id: user._id, fullname: user.fullname }
+        const bug = { title, description, severity, labels, creator }
         bugService.save(bug)
             .then(savedBug => {
                 setBugs([...bugs, savedBug])
@@ -50,12 +53,11 @@ export function BugIndex() {
     }
 
     function onEditBug(bug) {
+        const description = prompt('New description?', bug.description || '')
         const severity = +prompt('New severity?', bug.severity)
         const labelStr = prompt('New labels? (comma separated)', (bug.labels && bug.labels.join(', ')) || '')
         const labels = labelStr ? labelStr.split(',').map(l => l.trim()) : []
-
-        const bugToSave = { ...bug, severity, labels }
-
+        const bugToSave = { ...bug, description, severity, labels }
         bugService.save(bugToSave)
             .then(savedBug => {
                 const bugsToUpdate = bugs.map(currBug =>

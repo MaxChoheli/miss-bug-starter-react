@@ -32,6 +32,7 @@ export function BugDetails() {
                 {bug.labels && bug.labels.length > 0 && (
                     <p>Labels: {bug.labels.join(', ')}</p>
                 )}
+                {bug.creator && <p>Creator: {bug.creator.fullname}</p>}
             </div>
         }
         <hr />
