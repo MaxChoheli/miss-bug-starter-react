@@ -1,11 +1,14 @@
 const BASE_URL = 'http://127.0.0.1:3030/api/auth'
+const ADMIN_URL = 'http://127.0.0.1:3030/api/user'
 import { eventBusService } from './event-bus.service.js'
 
 export const userService = {
     login,
     signup,
     logout,
-    getLoggedinUser
+    getLoggedinUser,
+    queryUsers,
+    removeUser
 }
 
 function login(credentials) {
@@ -58,4 +61,22 @@ function getLoggedinUser() {
     } catch (err) {
         return null
     }
+}
+
+function queryUsers() {
+    return fetch(ADMIN_URL, { credentials: 'include' })
+        .then(async res => {
+            if (!res.ok) throw new Error(await res.text())
+            return res.json()
+        })
+}
+
+function removeUser(userId) {
+    return fetch(`${ADMIN_URL}/${userId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+    }).then(async res => {
+        if (!res.ok) throw new Error(await res.text())
+        return res.json()
+    })
 }

@@ -10,6 +10,7 @@ import { BugDetails } from './pages/BugDetails.jsx'
 import { AboutUs } from './pages/AboutUs.jsx'
 import { LoginSignup } from './pages/LoginSignup.jsx'
 import { UserDetails } from './pages/UserDetails.jsx'
+import { UserIndex } from './pages/UserIndex.jsx'
 
 export function App() {
     return <Router>
@@ -24,6 +25,7 @@ export function App() {
                     <Route path="/about" element={<AboutUs />} />
                     <Route path="/login" element={<LoginSignup />} />
                     <Route path="/user/:userId" element={<UserDetails />} />
+                    <Route path="/users" element={<UserIndex />} />
                 </Routes>
             </main>
             <AppFooter />

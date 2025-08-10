@@ -32,8 +32,8 @@ app.post('/api/auth/signup', async (req, res) => {
         if (!username || !password || !fullname) return res.status(400).send({ error: 'Missing fields' })
         const exists = await userService.getByUsername(username)
         if (exists) return res.status(409).send({ error: 'Username taken' })
-        const user = await userService.add({ username, password, fullname })
-        const miniUser = { _id: user._id, fullname: user.fullname }
+        const user = await userService.add({ username, password, fullname, isAdmin: false })
+        const miniUser = { _id: user._id, fullname: user.fullname, isAdmin: user.isAdmin }
         const token = makeToken()
         tokens.set(token, miniUser)
         res.cookie('loginToken', token, { httpOnly: true, sameSite: 'Lax', secure: false, path: '/' })
@@ -49,7 +49,7 @@ app.post('/api/auth/login', async (req, res) => {
         if (!username || !password) return res.status(400).send({ error: 'Missing fields' })
         const user = await userService.getByCredentials(username, password)
         if (!user) return res.status(401).send({ error: 'Invalid credentials' })
-        const miniUser = { _id: user._id, fullname: user.fullname }
+        const miniUser = { _id: user._id, fullname: user.fullname, isAdmin: user.isAdmin }
         const token = makeToken()
         tokens.set(token, miniUser)
         res.cookie('loginToken', token, { httpOnly: true, sameSite: 'Lax', secure: false, path: '/' })
@@ -142,7 +142,7 @@ app.put('/api/bug/:bugId', async (req, res) => {
         const bugId = req.params.bugId
         const existing = await bugService.getById(bugId)
         if (!existing) return res.status(404).send({ error: 'Bug not found' })
-        if (existing.creator && existing.creator._id !== loggedinUser._id) return res.status(403).send({ error: 'Not owner' })
+        if (!loggedinUser.isAdmin && existing.creator && existing.creator._id !== loggedinUser._id) return res.status(403).send({ error: 'Not owner' })
         const updatable = {}
         if ('title' in req.body) updatable.title = req.body.title
         if ('description' in req.body) updatable.description = req.body.description
@@ -163,11 +163,38 @@ app.delete('/api/bug/:bugId', async (req, res) => {
         const bugId = req.params.bugId
         const existing = await bugService.getById(bugId)
         if (!existing) return res.status(404).send({ error: 'Bug not found' })
-        if (existing.creator && existing.creator._id !== loggedinUser._id) return res.status(403).send({ error: 'Not owner' })
+        if (!loggedinUser.isAdmin && existing.creator && existing.creator._id !== loggedinUser._id) return res.status(403).send({ error: 'Not owner' })
         await bugService.remove(bugId)
         res.send({ msg: 'Bug removed' })
     } catch (err) {
         res.status(500).send({ error: 'Failed to remove bug' })
+    }
+})
+
+app.get('/api/user', async (req, res) => {
+    try {
+        const loggedinUser = getLoggedinUser(req)
+        if (!loggedinUser || !loggedinUser.isAdmin) return res.status(403).send({ error: 'Admin only' })
+        const users = await userService.query()
+        const safeUsers = users.map(u => ({ _id: u._id, username: u.username, fullname: u.fullname, isAdmin: u.isAdmin }))
+        res.send(safeUsers)
+    } catch (err) {
+        res.status(500).send({ error: 'Failed to get users' })
+    }
+})
+
+app.delete('/api/user/:userId', async (req, res) => {
+    try {
+        const loggedinUser = getLoggedinUser(req)
+        if (!loggedinUser || !loggedinUser.isAdmin) return res.status(403).send({ error: 'Admin only' })
+        const userId = req.params.userId
+        const allBugs = await bugService.query({}, {}, {})
+        const ownsBugs = allBugs.some(b => b.creator && b.creator._id === userId)
+        if (ownsBugs) return res.status(400).send({ error: 'User owns bugs' })
+        await userService.remove(userId)
+        res.send({ msg: 'User removed' })
+    } catch (err) {
+        res.status(500).send({ error: 'Failed to remove user' })
     }
 })
 

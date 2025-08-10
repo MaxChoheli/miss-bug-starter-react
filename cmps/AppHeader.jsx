@@ -21,6 +21,7 @@ export function AppHeader() {
             <NavLink to="/">Home</NavLink>
             <NavLink to="/bug">Bugs</NavLink>
             <NavLink to="/about">About</NavLink>
+            {user && user.isAdmin ? <NavLink to="/users">Users</NavLink> : null}
             {user ? <span>
                 <NavLink to={`/user/${user._id}`}>Profile</NavLink>
                 <button onClick={onLogout}>Logout</button>

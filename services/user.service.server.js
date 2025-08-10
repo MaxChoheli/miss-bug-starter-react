@@ -10,7 +10,8 @@ export const userService = {
     query,
     add,
     getByCredentials,
-    getByUsername
+    getByUsername,
+    remove
 }
 
 async function query() {
@@ -20,7 +21,7 @@ async function query() {
 
 async function add(user) {
     const users = await query()
-    const newUser = { _id: makeId(), username: user.username, password: user.password, fullname: user.fullname }
+    const newUser = { _id: makeId(), username: user.username, password: user.password, fullname: user.fullname, isAdmin: !!user.isAdmin }
     users.push(newUser)
     await fs.writeFile(filePath, JSON.stringify(users, null, 2))
     return newUser
@@ -34,6 +35,14 @@ async function getByCredentials(username, password) {
 async function getByUsername(username) {
     const users = await query()
     return users.find(u => u.username === username) || null
+}
+
+async function remove(userId) {
+    const users = await query()
+    const idx = users.findIndex(u => u._id === userId)
+    if (idx === -1) return
+    users.splice(idx, 1)
+    await fs.writeFile(filePath, JSON.stringify(users, null, 2))
 }
 
 function makeId(length = 6) {
