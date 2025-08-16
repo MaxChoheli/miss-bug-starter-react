@@ -7,12 +7,24 @@ import { userService } from './services/user.service.server.js'
 const app = express()
 const tokens = new Map()
 
+const PORT = process.env.PORT || 3030
+const NODE_ENV = process.env.NODE_ENV || 'development'
+const isProd = NODE_ENV === 'production'
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://127.0.0.1:5500'
+const SECRET1 = process.env.SECRET1 || 'dev-secret'
+
 app.use(cors({
-    origin: 'http://127.0.0.1:5500',
+    origin: [FRONTEND_URL, 'http://127.0.0.1:5500'],
     credentials: true
 }))
 app.use(cookieParser())
 app.use(express.json())
+
+function cookieOpts() {
+    return isProd
+        ? { httpOnly: true, sameSite: 'None', secure: true, path: '/' }
+        : { httpOnly: true, sameSite: 'Lax', secure: false, path: '/' }
+}
 
 function getLoggedinUser(req) {
     const token = req.cookies.loginToken
@@ -36,7 +48,7 @@ app.post('/api/auth/signup', async (req, res) => {
         const miniUser = { _id: user._id, fullname: user.fullname, isAdmin: user.isAdmin }
         const token = makeToken()
         tokens.set(token, miniUser)
-        res.cookie('loginToken', token, { httpOnly: true, sameSite: 'Lax', secure: false, path: '/' })
+        res.cookie('loginToken', token, cookieOpts())
         res.send(miniUser)
     } catch (err) {
         res.status(500).send({ error: 'Signup failed' })
@@ -52,7 +64,7 @@ app.post('/api/auth/login', async (req, res) => {
         const miniUser = { _id: user._id, fullname: user.fullname, isAdmin: user.isAdmin }
         const token = makeToken()
         tokens.set(token, miniUser)
-        res.cookie('loginToken', token, { httpOnly: true, sameSite: 'Lax', secure: false, path: '/' })
+        res.cookie('loginToken', token, cookieOpts())
         res.send(miniUser)
     } catch (err) {
         res.status(500).send({ error: 'Login failed' })
@@ -198,4 +210,4 @@ app.delete('/api/user/:userId', async (req, res) => {
     }
 })
 
-app.listen(3030, () => console.log('Server ready at port 3030'))
+app.listen(PORT, () => console.log('Server ready at port', PORT))
